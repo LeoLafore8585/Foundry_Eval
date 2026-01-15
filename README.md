@@ -1,66 +1,22 @@
-## Foundry
+# Déploiement Sepolia
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+- Adresse du contrat :  
+  https://sepolia.etherscan.io/address/0x554c6079Cf65B967E87C06Acf961204B9cfC522d
 
-Foundry consists of:
+- Transaction de déploiement :  
+  https://sepolia.etherscan.io/tx/0x9e70e9cd5117cfad47a1d3b2ea758583e75cf3f3dcfa45772b3f10df7292b264
 
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+- Contrat VotingNFT associé :  
+  https://sepolia.etherscan.io/address/0x7CC1D32aeE011Cf4817c649a23a899F9FbBF9Ea7
 
-## Documentation
 
-https://book.getfoundry.sh/
+# 2 eme Déploiement Sepolia
 
-## Usage
+- Adresse du contrat :  
+  https://sepolia.etherscan.io/address/0xbE161D15D30250ba7ff86f261a102246CfdC0Dd1
 
-### Build
+- Transaction de déploiement :  
+  https://sepolia.etherscan.io/tx/0x2012f4cc6c163830270658b5de6fb7fe0e7bbb42bc7d5711503d85ff80828960
 
-```shell
-$ forge build
-```
-
-### Test
-
-```shell
-$ forge test
-```
-
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+- Contrat VotingNFT associé :  
+  https://sepolia.etherscan.io/address/0xDfC7fEA1e419E80e84C95c61Ae1f841E6d5AdD03
