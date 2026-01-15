@@ -31,10 +31,11 @@ contract SimpleVotingSystem is Ownable, AccessControl {
     // Mappings et variables de stockage
     mapping(uint => Candidate) public candidates;
     mapping(address => bool) public voters;
+    mapping(uint => uint) public candidateFunds;
     uint[] private candidateIds;
 
-    // Fonds associés à chaque candidat
-    mapping(uint => uint) public candidateFunds;
+    // Timestamp de début de la phase VOTE
+    uint public voteStartTime;
 
     // Constructeur
     constructor() Ownable(msg.sender) {
@@ -58,6 +59,10 @@ contract SimpleVotingSystem is Ownable, AccessControl {
         WorkflowStatus _newStatus
     ) external onlyRole(ADMIN_ROLE) {
         workflowStatus = _newStatus;
+
+        if (_newStatus == WorkflowStatus.VOTE) {
+            voteStartTime = block.timestamp;
+        }
     }
 
     // Fonctions pour gérer les candidats et les votes
@@ -82,12 +87,16 @@ contract SimpleVotingSystem is Ownable, AccessControl {
             _candidateId > 0 && _candidateId <= candidateIds.length,
             "Invalid candidate ID"
         );
+        require(
+            block.timestamp >= voteStartTime + 1 hours,
+            "Voting not allowed yet"
+        );
 
         voters[msg.sender] = true;
         candidates[_candidateId].voteCount += 1;
     }
 
-    // Fonction pour envoyer des fonds à un candidat (seulement les founders)
+    // Funding des candidats
     function fundCandidate(
         uint _candidateId
     ) external payable onlyRole(FOUNDER_ROLE) {
@@ -109,12 +118,10 @@ contract SimpleVotingSystem is Ownable, AccessControl {
         return candidates[_candidateId].voteCount;
     }
 
-    // Fonction pour obtenir le nombre total de candidats
     function getCandidatesCount() public view returns (uint) {
         return candidateIds.length;
     }
 
-    // Fonction pour obtenir les détails d'un candidat
     function getCandidate(
         uint _candidateId
     ) public view returns (Candidate memory) {
