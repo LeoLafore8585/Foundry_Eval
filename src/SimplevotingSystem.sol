@@ -15,6 +15,8 @@ contract SimpleVotingSystem is Ownable, AccessControl {
 
     // Roles ADMIN
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    // Role FOUNDER
+    bytes32 public constant FOUNDER_ROLE = keccak256("FOUNDER_ROLE");
 
     // Workflow statuses
     enum WorkflowStatus {
@@ -31,10 +33,14 @@ contract SimpleVotingSystem is Ownable, AccessControl {
     mapping(address => bool) public voters;
     uint[] private candidateIds;
 
+    // Fonds associés à chaque candidat
+    mapping(uint => uint) public candidateFunds;
+
     // Constructeur
     constructor() Ownable(msg.sender) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(ADMIN_ROLE, msg.sender);
+        _grantRole(FOUNDER_ROLE, msg.sender);
 
         workflowStatus = WorkflowStatus.REGISTER_CANDIDATES;
     }
@@ -81,6 +87,19 @@ contract SimpleVotingSystem is Ownable, AccessControl {
         candidates[_candidateId].voteCount += 1;
     }
 
+    // Fonction pour envoyer des fonds à un candidat (seulement les founders)
+    function fundCandidate(
+        uint _candidateId
+    ) external payable onlyRole(FOUNDER_ROLE) {
+        require(
+            _candidateId > 0 && _candidateId <= candidateIds.length,
+            "Invalid candidate ID"
+        );
+        require(msg.value > 0, "No funds sent");
+
+        candidateFunds[_candidateId] += msg.value;
+    }
+
     // Fonctions pour obtenir les résultats
     function getTotalVotes(uint _candidateId) public view returns (uint) {
         require(
@@ -112,9 +131,11 @@ contract SimpleVotingSystem is Ownable, AccessControl {
         super.transferOwnership(newOwner);
 
         _revokeRole(ADMIN_ROLE, oldOwner);
+        _revokeRole(FOUNDER_ROLE, oldOwner);
         _revokeRole(DEFAULT_ADMIN_ROLE, oldOwner);
 
         _grantRole(ADMIN_ROLE, newOwner);
+        _grantRole(FOUNDER_ROLE, newOwner);
         _grantRole(DEFAULT_ADMIN_ROLE, newOwner);
     }
 }
