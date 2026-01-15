@@ -5,6 +5,19 @@ import {Ownable} from "openzeppelin-contracts/contracts/access/Ownable.sol";
 import {
     AccessControl
 } from "openzeppelin-contracts/contracts/access/AccessControl.sol";
+import {ERC721} from "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
+
+// NFT de vote, un NFT par votant
+contract VotingNFT is ERC721, Ownable {
+    uint256 private _nextTokenId;
+
+    constructor() ERC721("VotingNFT", "VOTE") Ownable(msg.sender) {}
+
+    function safeMint(address to) external onlyOwner {
+        uint256 tokenId = ++_nextTokenId;
+        _safeMint(to, tokenId);
+    }
+}
 
 contract SimpleVotingSystem is Ownable, AccessControl {
     struct Candidate {
@@ -37,6 +50,9 @@ contract SimpleVotingSystem is Ownable, AccessControl {
     // Timestamp de début de la phase VOTE
     uint public voteStartTime;
 
+    // Contrat NFT de vote
+    VotingNFT public votingNFT;
+
     // Constructeur
     constructor() Ownable(msg.sender) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -44,6 +60,9 @@ contract SimpleVotingSystem is Ownable, AccessControl {
         _grantRole(FOUNDER_ROLE, msg.sender);
 
         workflowStatus = WorkflowStatus.REGISTER_CANDIDATES;
+
+        // Déploiement du NFT de vote 
+        votingNFT = new VotingNFT();
     }
 
     modifier onlyDuring(WorkflowStatus _status) {
@@ -91,9 +110,16 @@ contract SimpleVotingSystem is Ownable, AccessControl {
             block.timestamp >= voteStartTime + 1 hours,
             "Voting not allowed yet"
         );
+        require(
+            votingNFT.balanceOf(msg.sender) == 0,
+            "Already owns voting NFT"
+        );
 
         voters[msg.sender] = true;
         candidates[_candidateId].voteCount += 1;
+
+        // Donne un NFT de vote au votant
+        votingNFT.safeMint(msg.sender);
     }
 
     // Funding des candidats
