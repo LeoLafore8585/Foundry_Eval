@@ -16,6 +16,16 @@ contract SimpleVotingSystem is Ownable, AccessControl {
     // Roles ADMIN
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
+    // Workflow statuses
+    enum WorkflowStatus {
+        REGISTER_CANDIDATES,
+        FOUND_CANDIDATES,
+        VOTE,
+        COMPLETED
+    }
+
+    WorkflowStatus public workflowStatus;
+
     // Mappings et variables de stockage
     mapping(uint => Candidate) public candidates;
     mapping(address => bool) public voters;
@@ -25,10 +35,33 @@ contract SimpleVotingSystem is Ownable, AccessControl {
     constructor() Ownable(msg.sender) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(ADMIN_ROLE, msg.sender);
+
+        workflowStatus = WorkflowStatus.REGISTER_CANDIDATES;
+    }
+
+    modifier onlyDuring(WorkflowStatus _status) {
+        require(
+            workflowStatus == _status,
+            "Function cannot be called at this time"
+        );
+        _;
+    }
+
+    // Gestion du workflow
+    function setWorkflowStatus(
+        WorkflowStatus _newStatus
+    ) external onlyRole(ADMIN_ROLE) {
+        workflowStatus = _newStatus;
     }
 
     // Fonctions pour gérer les candidats et les votes
-    function addCandidate(string memory _name) public onlyRole(ADMIN_ROLE) {
+    function addCandidate(
+        string memory _name
+    )
+        public
+        onlyRole(ADMIN_ROLE)
+        onlyDuring(WorkflowStatus.REGISTER_CANDIDATES)
+    {
         require(bytes(_name).length > 0, "Candidate name cannot be empty");
 
         uint candidateId = candidateIds.length + 1;
@@ -37,7 +70,7 @@ contract SimpleVotingSystem is Ownable, AccessControl {
     }
 
     // Fonction pour voter pour un candidat
-    function vote(uint _candidateId) public {
+    function vote(uint _candidateId) public onlyDuring(WorkflowStatus.VOTE) {
         require(!voters[msg.sender], "You have already voted");
         require(
             _candidateId > 0 && _candidateId <= candidateIds.length,
