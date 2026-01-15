@@ -61,7 +61,7 @@ contract SimpleVotingSystem is Ownable, AccessControl {
 
         workflowStatus = WorkflowStatus.REGISTER_CANDIDATES;
 
-        // Déploiement du NFT de vote 
+        // Déploiement du NFT de vote
         votingNFT = new VotingNFT();
     }
 
@@ -170,5 +170,28 @@ contract SimpleVotingSystem is Ownable, AccessControl {
         _grantRole(ADMIN_ROLE, newOwner);
         _grantRole(FOUNDER_ROLE, newOwner);
         _grantRole(DEFAULT_ADMIN_ROLE, newOwner);
+    }
+
+    // Désigne le candidat vainqueur  lorsque le workflow est terminé
+    function getWinningCandidateId() public view returns (uint) {
+        require(
+            workflowStatus == WorkflowStatus.COMPLETED,
+            "Workflow not completed"
+        );
+        require(candidateIds.length > 0, "No candidates");
+
+        uint winningId = candidateIds[0];
+        uint highestVotes = candidates[winningId].voteCount;
+
+        for (uint i = 1; i < candidateIds.length; i++) {
+            uint candidateId = candidateIds[i];
+            uint votes = candidates[candidateId].voteCount;
+            if (votes > highestVotes) {
+                highestVotes = votes;
+                winningId = candidateId;
+            }
+        }
+
+        return winningId;
     }
 }
