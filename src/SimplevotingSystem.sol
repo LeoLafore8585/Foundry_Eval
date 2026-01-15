@@ -30,6 +30,8 @@ contract SimpleVotingSystem is Ownable, AccessControl {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     // Role FOUNDER
     bytes32 public constant FOUNDER_ROLE = keccak256("FOUNDER_ROLE");
+    // Role WITHDRAWER
+    bytes32 public constant WITHDRAWER_ROLE = keccak256("WITHDRAWER_ROLE");
 
     // Workflow statuses
     enum WorkflowStatus {
@@ -58,6 +60,7 @@ contract SimpleVotingSystem is Ownable, AccessControl {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(ADMIN_ROLE, msg.sender);
         _grantRole(FOUNDER_ROLE, msg.sender);
+        _grantRole(WITHDRAWER_ROLE, msg.sender);
 
         workflowStatus = WorkflowStatus.REGISTER_CANDIDATES;
 
@@ -135,6 +138,23 @@ contract SimpleVotingSystem is Ownable, AccessControl {
         candidateFunds[_candidateId] += msg.value;
     }
 
+    // Fonction de retrait des fonds du contrat (seulement quand le workflow est terminé)
+    function withdraw(
+        address payable to,
+        uint amount
+    ) external onlyRole(WITHDRAWER_ROLE) {
+        require(
+            workflowStatus == WorkflowStatus.COMPLETED,
+            "Workflow not completed"
+        );
+        require(to != address(0), "Invalid recipient");
+        require(amount > 0, "Amount must be greater than zero");
+        require(address(this).balance >= amount, "Insufficient balance");
+
+        (bool success, ) = to.call{value: amount}("");
+        require(success, "Withdraw failed");
+    }
+
     // Fonctions pour obtenir les résultats
     function getTotalVotes(uint _candidateId) public view returns (uint) {
         require(
@@ -165,14 +185,16 @@ contract SimpleVotingSystem is Ownable, AccessControl {
 
         _revokeRole(ADMIN_ROLE, oldOwner);
         _revokeRole(FOUNDER_ROLE, oldOwner);
+        _revokeRole(WITHDRAWER_ROLE, oldOwner);
         _revokeRole(DEFAULT_ADMIN_ROLE, oldOwner);
 
         _grantRole(ADMIN_ROLE, newOwner);
         _grantRole(FOUNDER_ROLE, newOwner);
+        _grantRole(WITHDRAWER_ROLE, newOwner);
         _grantRole(DEFAULT_ADMIN_ROLE, newOwner);
     }
 
-    // Désigne le candidat vainqueur  lorsque le workflow est terminé
+    // Désigne le candidat vainqueur lorsque le workflow est terminé
     function getWinningCandidateId() public view returns (uint) {
         require(
             workflowStatus == WorkflowStatus.COMPLETED,
